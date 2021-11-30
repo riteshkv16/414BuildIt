@@ -102,16 +102,23 @@ int main(int argc, char** argv){
 		}
 
 		/* okay, connected to bank/atm. Send/recv messages to/from the bank/atm. */
-		char buffer[1024];
-		bank_recv(b, buffer, sizeof(buffer));
-		printf("bank received:  %s\n", buffer);
-		strcpy(buffer, "money money money");
-		bank_send(b, buffer, strlen(buffer)+1);
+		int MAX_MSG_SIZE = 5000;
+		char data[MAX_MSG_SIZE];
+
+		ssize_t res =  bank_recv(b, data, sizeof(data));
+		if(res >= 0){
+			printf("bank received:  %s\n", data);
+			bank_process_remote_command(b, data, sizeof(data));
+		} 
+
+		/*strcpy(buffer, "money money money");
+		bank_send(b, buffer, strlen(buffer)+1);*/
+
 
 
 		/* when finished processing commands ...*/
-		close(b->clientfd);
-		b->clientfd = -1;
+		/*close(b->clientfd);
+		b->clientfd = -1;*/
 	}
 	
 	
