@@ -18,7 +18,10 @@ int main(int argc, char** argv){
 	char *ipAddr = NULL;
 	char *card = NULL;
 	char *account = NULL;
+	char mode = '\0';
 	size_t file_len;
+	int amount;
+	
 	//Might be wrong max args
 	if(argc > 13){
 		return FAILURE;
@@ -37,7 +40,7 @@ int main(int argc, char** argv){
 	regcomp(&valid_filenames, "^([a-zA-Z0-9._\\-]*)$", REG_EXTENDED); 
 	regcomp(&valid_ip, "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", REG_EXTENDED);
 	regcomp(&valid_card, "^([a-zA-Z0-9._\\-]*).card$", REG_EXTENDED);
-	while ((cflag = getopt(argc, argv, "p:s:i:a:c:")) != -1) {
+	while ((cflag = getopt(argc, argv, "p:s:i:a:c:n:d:w:g::")) != -1) {
 		switch(cflag){
 			case 'a':
 				if(account == NULL){
@@ -134,6 +137,38 @@ int main(int argc, char** argv){
 					return FAILURE;
 				}
 				break;
+			case 'n':
+				if(!mode){
+					mode = 'n';
+					amount = atoi(optarg);
+				} else {
+					return FAILURE;
+				}
+				break;
+			case 'd':
+				if(!mode){
+					mode = 'd';
+					amount = atoi(optarg);
+				} else {
+					return FAILURE;
+				}
+				break;
+			case 'w':
+				if(!mode){
+					mode = 'w';
+					amount = atoi(optarg);
+				} else {
+					return FAILURE;
+				}
+				break;
+			case 'g':
+				if(!mode){
+					mode = 'g';
+					printf("optarg: %s\n", optarg);
+				} else {
+					return FAILURE;
+				}
+				break;
 			case '?':
 				return FAILURE;
 		}
@@ -156,18 +191,37 @@ int main(int argc, char** argv){
 		strcpy(card, account); 
 		strcat(card, ".card"); 
 	}
+	if(!mode){
+		return FAILURE; 
+	}
 	printf("Account: %s\n", account);
 	printf("Auth file: %s\n", auth_file);
 	printf("IP: %s\n", ipAddr);
 	printf("Port: %d\n", port);
 	printf("Card: %s\n", card);
-
+	printf("Mode: %c\n", mode);
+	switch (mode) {
+		case 'n':
+			printf("Amount: %d\n", amount);
+			break;
+		case 'd':
+			printf("Amount: %d\n", amount);
+			break;
+		case 'w':
+			printf("Amount: %d\n", amount);
+			break;
+	}
 	ATM *atm = atm_create(ipAddr, port);
 
 	/* send messages */
 
 	char buffer[] = "Hello I am the atm and I would like to have money please";
-	atm_send(atm, buffer, sizeof(buffer));
+	int msg_size = sizeof(account) + sizeof(auth_file) + sizeof(ipAddr) + sizeof(card) + 1;
+	char *msg = malloc(msg_size);
+	int j = snprintf(msg, msg_size, "%s%s%s%s%c", account, auth_file, ipAddr, card, mode);
+	printf("msg %s\n", msg);
+	atm_send(atm, msg, j);
+	//atm_send(atm, buffer, sizeof(buffer));
 	atm_recv(atm, buffer, sizeof(buffer));
 	printf("atm received %s\n", buffer);
 	

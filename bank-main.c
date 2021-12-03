@@ -73,9 +73,7 @@ int main(int argc, char** argv){
 				return FAILURE;
 		}
 
-	}
-
-	
+	}	
 
 	if(auth_file == NULL){
 		auth_file = DEFAULT_AUTH_FILE;
@@ -92,7 +90,7 @@ int main(int argc, char** argv){
 	
 	Bank *b = bank_create(auth_file, ip, port);
 	
-	for(;;) {
+	while(1) {
 
 		unsigned int len = sizeof(b->remote_addr);
 		b->clientfd = accept(b->sockfd, (struct sockaddr*)&b->remote_addr, &len);
@@ -111,14 +109,14 @@ int main(int argc, char** argv){
 			bank_process_remote_command(b, data, sizeof(data));
 		} 
 
-		/*strcpy(buffer, "money money money");
-		bank_send(b, buffer, strlen(buffer)+1);*/
+		char buffer[] = "money money money";
+		bank_send(b, buffer, sizeof(buffer));
 
 
 
 		/* when finished processing commands ...*/
-		/*close(b->clientfd);
-		b->clientfd = -1;*/
+		close(b->clientfd);
+		b->clientfd = -1;
 	}
 	
 	
